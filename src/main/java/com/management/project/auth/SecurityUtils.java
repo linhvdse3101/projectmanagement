@@ -1,5 +1,6 @@
 package com.management.project.auth;
 
+import com.management.project.responses.UserAccountDto;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,10 +25,13 @@ public class SecurityUtils {
     }
 
     // Optionally, get the full UserDetails object
-    public static UserDetails getLoggedInUser() {
+    public static UserAccountDto getLoggedInUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            return (UserDetails) authentication.getPrincipal();
+            var userDetail = (UserDetails) authentication.getPrincipal();
+            return UserAccountDto.builder()
+                    .userName(userDetail.getUsername())
+                    .build();
         }
         return null;
     }

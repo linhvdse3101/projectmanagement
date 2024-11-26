@@ -22,9 +22,9 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private JwtUtil jwtUtil;
-    private UserDetailsService userAccountService;
-    private UserTokenRepository userTokenRepository;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userAccountService;
+    private final UserTokenRepository userTokenRepository;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -51,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             String userName = jwtUtil.extractUsername(token);
-            if (StringUtils.hasText(userName) && SecurityContextHolder.getContext().getAuthentication() != null){
+            if (StringUtils.hasText(userName)){
                 UserDetails account = this.userAccountService.loadUserByUsername(userName);
                 var currToken = userTokenRepository.findByToken(token).map(t->!t.isExpired() && !t.isRevoked()).orElse(false);
                 if(jwtUtil.validateToken(token, account) && currToken) {
@@ -62,9 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-//                List<String> th = new ArrayList<>();
-//                th.clear();
-
+                filterChain.doFilter(request, response);
             }
         } catch (Exception ex) {
             logger.error("failed on set user authentication", ex);

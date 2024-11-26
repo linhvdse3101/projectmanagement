@@ -1,6 +1,8 @@
 package com.management.project.appconfigs;
 
+import com.management.project.commons.database.CommonMapper;
 import com.management.project.repositorys.user.UserRepository;
+import com.management.project.responses.UserAccountDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -9,22 +11,39 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class AppConfig {
-
     private final UserRepository repository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> repository.findByUserName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return username -> {
+            // Query the repository for user and role information
+            List<Object[]> userAndRoles = repository.findUserAndRoleAccountByUserName(username);
+
+            if (userAndRoles == null) {
+                log.error("User not found: + username");
+                throw new UsernameNotFoundException("User not found: " + username);
+            }
+            CommonMapper<UserAccountDto> commonMapper = new CommonMapper<>(UserAccountDto::new);
+            List<UserAccountDto> userAccountDtos = commonMapper.mapToObjects(userAndRoles);
+            // Convert UserAccountDto to UserDetails
+            return new User(
+                    userAccountDtos.get(0).getUsername(),
+                    userAccountDtos.get(0).getPassword(),
+                    userAccountDtos.get(0).getAuthorities() // Assuming this method provides a collection of GrantedAuthority
+            );
+        };
     }
 
     @Bean

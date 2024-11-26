@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Builder
 @NamedEntityGraph(name = "UserAccount.roles", attributeNodes = @NamedAttributeNode("roles"))
 @NamedEntityGraph(name = "UserAccount.projects", attributeNodes = @NamedAttributeNode("projects"))
-public class UserAccount extends AbstractEntity implements UserDetails {
+public class UserAccount extends AbstractEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
@@ -58,33 +58,4 @@ public class UserAccount extends AbstractEntity implements UserDetails {
 //    @JsonManagedReference
     private Set<UserToken> tokens;
 
-    @Override
-    public String getPassword() {
-        return userPassword;
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 }

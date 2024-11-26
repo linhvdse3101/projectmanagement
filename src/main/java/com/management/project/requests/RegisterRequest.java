@@ -26,5 +26,6 @@ public class RegisterRequest {
 
     @Email(message = "email not validate")
     private String email;
+    private String roleName;
 
 }

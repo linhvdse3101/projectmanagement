@@ -1,6 +1,6 @@
 package com.management.project.auth;
 
-import com.management.project.domains.user.UserAccount;
+import com.management.project.responses.UserAccountDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -42,8 +42,18 @@ public class JwtUtil {
         final Claims claims = extractAllClaims(token);
         return claimResolver.resolver(claims);
     }
-    private Claims extractAllClaims(String token){
-        return Jwts.parserBuilder().setSigningKey(getSignInKey()).build().parseClaimsJwt(token).getBody();
+
+    private Claims extractAllClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token) // Sửa parseClaimsJwt thành parseClaimsJws
+                    .getBody();
+        } catch (io.jsonwebtoken.JwtException e) {
+            log.error(e.getMessage());
+            throw new IllegalArgumentException("Invalid JWT token", e);
+        }
     }
 
     public Boolean isTokenExpired(String token){
@@ -66,12 +76,12 @@ public class JwtUtil {
         return false;
     }
 
-    public String refreshToken(UserAccount user){
+    public String refreshToken(UserAccountDto user){
         Map<String, Object> claimsInfo = new HashMap<>();
         return generateToken(user, claimsInfo, refreshTokenExpiration);
     }
 
-    public String generateToken(UserAccount account, Map<String, Object> claimsInfo, long expirationToken){
+    public String generateToken(UserAccountDto account, Map<String, Object> claimsInfo, long expirationToken){
 
         claimsInfo.put("role", account.getRoles().toString()); // custom here
 
@@ -83,7 +93,7 @@ public class JwtUtil {
                 .signWith(getSignInKey())
                 .compact();
     }
-    public String generateToken(UserAccount acc) {
+    public String generateToken(UserAccountDto acc) {
         return generateToken(acc,new HashMap<>(), expiration);
     }
 

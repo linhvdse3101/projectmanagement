@@ -3,10 +3,10 @@ package com.management.project.services.auth.serviceImpls;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.management.project.auth.JwtUtil;
 import com.management.project.auth.SecurityUtils;
+import com.management.project.commons.database.CommonMapper;
 import com.management.project.domains.user.UserAccount;
 import com.management.project.domains.user.UserRole;
 import com.management.project.domains.user.UserToken;
-import com.management.project.enums.Role;
 import com.management.project.enums.TokenType;
 import com.management.project.handelexceptions.ValidateException;
 import com.management.project.repositorys.user.UserRepository;
@@ -14,31 +14,31 @@ import com.management.project.repositorys.user.UserRoleRepository;
 import com.management.project.repositorys.user.UserTokenRepository;
 import com.management.project.requests.RegisterRequest;
 import com.management.project.responses.AuthResponse;
+import com.management.project.responses.UserAccountDto;
 import com.management.project.services.auth.UserAccountService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserDetailsServiceImpl implements UserAccountService {
 
-    private final UserRepository userRepository;
+    private  final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
     private final UserTokenRepository userTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -54,12 +54,11 @@ public class UserDetailsServiceImpl implements UserAccountService {
         }
         String currentRole = SecurityUtils.getLoggedInUserRole();
         UserAccount userAccount = userRepository.findByUserName(request.getUserName()).orElse(null);
+
         if (Objects.nonNull(userAccount)) {
             log.error("User Name is exited");
             throw new ValidateException("User Name is exited");
         }
-
-//        if (currentRole.equals(Role.ADMIN.getName())) {
         UserAccount acc = UserAccount.builder()
                 .userName(request.getUserName())
                 .userPassword(passwordEncoder.encode(request.getUserPassword()))
@@ -67,24 +66,21 @@ public class UserDetailsServiceImpl implements UserAccountService {
                 .email(request.getEmail())
                 .build();
         UserRole currRole = UserRole.builder()
-                .roleName(Role.ADMIN.getName())
+                .roleName(request.getRoleName())
                 .user(acc)  // Gán user vào vai trò
                 .build();
-//        acc.getRoles().add(currRole);  // Thêm vai trò vào UserAccount
         acc.prePersist(); // Đặt các giá trị prePersist cho UserAccount
         userRepository.save(acc); // Lưu UserAccount trước
         // Thiết lập mối quan hệ giữa UserAccount và UserRole
-//        currRole.prePersist(); // Đặt các giá trị prePersist cho UserRole
+        currRole.prePersist(); // Đặt các giá trị prePersist cho UserRole
         roleRepository.save(currRole); // Sau đó lưu UserRole
         log.debug("User Account ID: " + acc.getUserId());
         log.debug("User Role ID: " + currRole.getRoleId());
-        String accessToken = jwtUtil.generateToken(acc);
-        String reFreshToken = jwtUtil.refreshToken(acc);
+        UserAccountDto response = UserAccountDto.builder().build();
+        String accessToken = jwtUtil.generateToken(response);
+        String reFreshToken = jwtUtil.refreshToken(response);
+
         return AuthResponse.builder().accessToken(accessToken).refreshToken(reFreshToken).tokenType(TokenType.BEARER.name()).build();
-//        } else {
-//            log.error("Only admin can create user");
-//            throw new ValidateException("Only admin can create user");
-//        }
     }
 
     @Override
@@ -95,13 +91,7 @@ public class UserDetailsServiceImpl implements UserAccountService {
                         password
                 )
         );
-        UserAccount acc = userRepository.findByUserName(userName).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
-        if (!acc.getRoles().isEmpty()) {
-            log.info("Roles size: " + acc.getRoles().size());
-            for (UserRole role : acc.getRoles()) {
-                log.info("Role: " + role.getRoleName());
-            }
-        }
+        UserAccountDto acc = getUserAccount(userName);
         String accessToken = jwtUtil.generateToken(acc);
         String refreshToken = jwtUtil.refreshToken(acc);
         revokeAllUserTokens(acc);
@@ -123,8 +113,7 @@ public class UserDetailsServiceImpl implements UserAccountService {
             refreshToken = authHeader.substring(7);
             userName = jwtUtil.extractUsername(refreshToken);
             if (StringUtils.hasText(userName)) {
-                var user = userRepository.findByUserName(userName)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                var user = getUserAccount(userName);
 
                 if (jwtUtil.validateToken(refreshToken, user)) {
                     var accessToken = jwtUtil.generateToken(user);
@@ -145,8 +134,20 @@ public class UserDetailsServiceImpl implements UserAccountService {
         }
     }
 
+    @Override
+    public  UserAccountDto getUserAccount(String userName) {
+        List<Object[]> userAccount = userRepository.findUserAndRoleAccountByUserName(userName);
+        CommonMapper<UserAccountDto> commonMapper = new CommonMapper<>(UserAccountDto::new);
+        List<UserAccountDto> userAccountDtos = commonMapper.mapToObjects(userAccount);
+
+        if (userAccountDtos.isEmpty()){
+            log.error("User not found: " + userName);
+        }
+        return userAccountDtos.stream().findFirst().orElse(null);
+    }
+
     // out interface function start
-    private void revokeAllUserTokens(UserAccount user) {
+    private void revokeAllUserTokens(UserAccountDto user) {
         var validUserTokens = userTokenRepository.findAllValidTokenByUser(user.getUserId());
         if (validUserTokens.isEmpty())
             return;
@@ -157,10 +158,12 @@ public class UserDetailsServiceImpl implements UserAccountService {
         userTokenRepository.saveAll(validUserTokens);
     }
 
-    private void saveUserToken(UserAccount user, String token) {
+    private void saveUserToken(UserAccountDto user, String token) {
         if (Objects.nonNull(user)) {
+            UserAccount userAccount = new UserAccount();
+            BeanUtils.copyProperties(user, userAccount);
             UserToken newToken = UserToken.builder()
-                    .user(user)
+                    .user(userAccount)
                     .token(token)
                     .tokenType(TokenType.BEARER)
                     .revoked(false)
@@ -170,8 +173,10 @@ public class UserDetailsServiceImpl implements UserAccountService {
         }
     }
 
-    private void saveToken(UserAccount user, String token) {
-        UserToken userToken = UserToken.builder().user(user).token(token).tokenType(TokenType.BEARER).expired(false).revoked(false).build();
+    private void saveToken(UserAccountDto user, String token) {
+        UserAccount userAccount = new UserAccount();
+        BeanUtils.copyProperties(user, userAccount);
+        UserToken userToken = UserToken.builder().user(userAccount).token(token).tokenType(TokenType.BEARER).expired(false).revoked(false).build();
         userToken.prePersist();
         userTokenRepository.save(userToken);
     }
