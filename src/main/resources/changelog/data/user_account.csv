@@ -1,0 +1,4 @@
+user_id,user_name,user_password,email
+1,linhvd1,$2a$10$bN/dRSRDBMCbOovq4aYuqOB2NTt03G3NAXDSyC2yVBRYMkAGo1cfq,john.doe@example.com
+2,linhvd2,$2a$10$bN/dRSRDBMCbOovq4aYuqOB2NTt03G3NAXDSyC2yVBRYMkAGo1cfq,jane.doe@example.com
+3,admin,$2a$10$bN/dRSRDBMCbOovq4aYuqOB2NTt03G3NAXDSyC2yVBRYMkAGo1cfq,admin@example.com

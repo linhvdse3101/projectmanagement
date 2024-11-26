@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+
+    <!-- ChangeSet to create user_account table -->
+    <changeSet id="create-user-account-table" author="Linhvd">
+        <createTable tableName="user_account">
+            <column name="user_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <!-- ChangeSet to create user_role table -->
+    <changeSet id="create-user-role-table" author="Linhvd">
+        <createTable tableName="user_role">
+            <column name="role_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="role_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- ChangeSet to create user_token table -->
+    <changeSet id="create-user-token-table" author="Linhvd">
+        <createTable tableName="user_token">
+            <column name="token_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="token" type="VARCHAR(255)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="token_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expired" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <!-- ChangeSet to create st_project table -->
+    <changeSet id="create-st-project-table" author="Linhvd">
+        <createTable tableName="st_project">
+            <column name="project_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <!-- ChangeSet to create st_task table -->
+    <changeSet id="create-st-task-table" author="Linhvd">
+        <createTable tableName="st_task">
+            <column name="task_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="task_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="task_status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_to" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- ChangeSet to add foreign key constraints -->
+    <changeSet id="add-foreign-key-st-task-project" author="Linhvd">
+        <addForeignKeyConstraint
+                baseTableName="st_task"
+                baseColumnNames="project_id"
+                constraintName="fk_st_task_project"
+                referencedTableName="st_project"
+                referencedColumnNames="project_id"/>
+    </changeSet>
+
+    <changeSet id="add-foreign-key-st-task-assigned-to" author="Linhvd">
+        <addForeignKeyConstraint
+                baseTableName="st_task"
+                baseColumnNames="assigned_to"
+                constraintName="fk_st_task_user"
+                referencedTableName="user_account"
+                referencedColumnNames="user_id"/>
+    </changeSet>
+    <!-- ChangeSet to add foreign key constraint -->
+    <changeSet id="add-foreign-key-st-project-owner" author="Linhvd">
+        <addForeignKeyConstraint
+                baseTableName="st_project"
+                baseColumnNames="owner_id"
+                constraintName="fk_st_project_user"
+                referencedTableName="user_account"
+                referencedColumnNames="user_id"/>
+    </changeSet>
+    <!-- ChangeSet to add foreign key constraint -->
+    <changeSet id="add-foreign-key-user-token" author="Linhvd">
+        <addForeignKeyConstraint
+                baseTableName="user_token"
+                baseColumnNames="user_id"
+                constraintName="fk_user_token_user_account"
+                referencedTableName="user_account"
+                referencedColumnNames="user_id"/>
+    </changeSet>
+
+    <!-- ChangeSet to create foreign key for roles -->
+    <changeSet id="add-roles-foreign-key" author="Linhvd">
+        <addForeignKeyConstraint
+                baseTableName="user_role"
+                baseColumnNames="user_id"
+                constraintName="fk_user_role_user_account"
+                referencedTableName="user_account"
+                referencedColumnNames="user_id"/>
+    </changeSet>
+
+    <!-- ChangeSet to create foreign key for projects -->
+    <changeSet id="add-projects-foreign-key" author="Linhvd">
+        <addForeignKeyConstraint
+                baseTableName="st_project"
+                baseColumnNames="owner_id"
+                constraintName="fk_project_user_account"
+                referencedTableName="user_account"
+                referencedColumnNames="user_id"/>
+    </changeSet>
+    <!--    <changeSet id="load-user-token-data" author="your_name">-->
+    <!--        <loadData-->
+    <!--                file="data/user_token.csv"-->
+    <!--                tableName="user_token"-->
+    <!--                separator="," />-->
+    <!--    </changeSet>-->
+</databaseChangeLog>

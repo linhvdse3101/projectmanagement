@@ -1,0 +1,4 @@
+project_id,title,project_description,status,owner_id
+1,Project A,Description of Project A,IN_PROGRESS,1
+2,Project B,Description of Project B,COMPLETED,2
+3,Project C,Description of Project C,NOT_STARTED,1
