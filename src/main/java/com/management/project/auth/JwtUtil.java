@@ -1,6 +1,6 @@
 package com.management.project.auth;
 
-import com.management.project.responses.UserAccountDto;
+import com.management.project.responses.commons.UserAccountDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

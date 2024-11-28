@@ -12,6 +12,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProjectResponse implements Serializable {
+    private Long projectId;
     private String name;
+    private String userName;
     private String description;
 }

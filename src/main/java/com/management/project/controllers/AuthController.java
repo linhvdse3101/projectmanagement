@@ -3,7 +3,7 @@ package com.management.project.controllers;
 import com.management.project.requests.AuthRequest;
 import com.management.project.requests.RegisterRequest;
 import com.management.project.responses.AuthResponse;
-import com.management.project.responses.CommonResponse;
+import com.management.project.responses.commons.CommonResponse;
 import com.management.project.services.auth.UserAccountService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

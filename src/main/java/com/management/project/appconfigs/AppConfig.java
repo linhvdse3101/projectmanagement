@@ -2,7 +2,7 @@ package com.management.project.appconfigs;
 
 import com.management.project.commons.database.CommonMapper;
 import com.management.project.repositorys.user.UserRepository;
-import com.management.project.responses.UserAccountDto;
+import com.management.project.responses.commons.UserAccountDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +11,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,18 +30,14 @@ public class AppConfig {
             // Query the repository for user and role information
             List<Object[]> userAndRoles = repository.findUserAndRoleAccountByUserName(username);
 
-            if (userAndRoles == null) {
-                log.error("User not found: + username");
+            if (userAndRoles.isEmpty()) {
+                log.error("User not found: " + username);
                 throw new UsernameNotFoundException("User not found: " + username);
             }
             CommonMapper<UserAccountDto> commonMapper = new CommonMapper<>(UserAccountDto::new);
             List<UserAccountDto> userAccountDtos = commonMapper.mapToObjects(userAndRoles);
             // Convert UserAccountDto to UserDetails
-            return new User(
-                    userAccountDtos.get(0).getUsername(),
-                    userAccountDtos.get(0).getPassword(),
-                    userAccountDtos.get(0).getAuthorities() // Assuming this method provides a collection of GrantedAuthority
-            );
+            return userAccountDtos.isEmpty() ? null :  userAccountDtos.get(0);
         };
     }
 

@@ -11,8 +11,12 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserAccount, Long> {
 
+   @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM UserAccount u")
+   Boolean existsAnyUser();
+
    @EntityGraph(attributePaths = "roles",  type = EntityGraph.EntityGraphType.LOAD, value = "UserAccount.roles")
    Optional<UserAccount> findByUserName(String userName);
+   Optional<UserAccount> findByUserId(Long userId);
 
    @Query(value = "SELECT ua.user_id as userId, " +
            "ua.user_name as userName, "+
@@ -21,4 +25,6 @@ public interface UserRepository extends JpaRepository<UserAccount, Long> {
            "ur.role_name as roles "+
            " FROM user_account ua join user_role ur on ua.user_id = ur.user_id WHERE ua.user_name = :userName", nativeQuery = true)
    List<Object[]> findUserAndRoleAccountByUserName(@Param("userName") String userName);
-}
+
+   @Query("SELECT u.userName FROM UserAccount u")
+   List<String> findAllUsernames();}

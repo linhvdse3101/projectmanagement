@@ -7,6 +7,7 @@ import com.management.project.commons.database.CommonMapper;
 import com.management.project.domains.user.UserAccount;
 import com.management.project.domains.user.UserRole;
 import com.management.project.domains.user.UserToken;
+import com.management.project.enums.Role;
 import com.management.project.enums.TokenType;
 import com.management.project.handelexceptions.ValidateException;
 import com.management.project.repositorys.user.UserRepository;
@@ -14,7 +15,7 @@ import com.management.project.repositorys.user.UserRoleRepository;
 import com.management.project.repositorys.user.UserTokenRepository;
 import com.management.project.requests.RegisterRequest;
 import com.management.project.responses.AuthResponse;
-import com.management.project.responses.UserAccountDto;
+import com.management.project.responses.commons.UserAccountDto;
 import com.management.project.services.auth.UserAccountService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +39,7 @@ import java.util.Objects;
 @Slf4j
 public class UserDetailsServiceImpl implements UserAccountService {
 
-    private  final UserRepository userRepository;
+    private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
     private final UserTokenRepository userTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -52,7 +53,6 @@ public class UserDetailsServiceImpl implements UserAccountService {
         if (Objects.isNull(request) || !StringUtils.hasText(request.getUserName()) || !StringUtils.hasText(request.getUserPassword())) {
             log.error("Username or password is not empty");
         }
-        String currentRole = SecurityUtils.getLoggedInUserRole();
         UserAccount userAccount = userRepository.findByUserName(request.getUserName()).orElse(null);
 
         if (Objects.nonNull(userAccount)) {
@@ -65,10 +65,13 @@ public class UserDetailsServiceImpl implements UserAccountService {
                 .roles(new HashSet<>())
                 .email(request.getEmail())
                 .build();
-        UserRole currRole = UserRole.builder()
+
+        UserRole currRole;
+        currRole = UserRole.builder()
                 .roleName(request.getRoleName())
                 .user(acc)  // Gán user vào vai trò
                 .build();
+
         acc.prePersist(); // Đặt các giá trị prePersist cho UserAccount
         userRepository.save(acc); // Lưu UserAccount trước
         // Thiết lập mối quan hệ giữa UserAccount và UserRole
@@ -76,7 +79,14 @@ public class UserDetailsServiceImpl implements UserAccountService {
         roleRepository.save(currRole); // Sau đó lưu UserRole
         log.debug("User Account ID: " + acc.getUserId());
         log.debug("User Role ID: " + currRole.getRoleId());
-        UserAccountDto response = UserAccountDto.builder().build();
+        UserAccountDto response = UserAccountDto.builder()
+                .userId(acc.getUserId())
+                .userName(acc.getUserName())
+                .userPassword(acc.getUserPassword())
+                .email(acc.getEmail())
+                .roles(currRole.getRoleName())
+                .build();
+
         String accessToken = jwtUtil.generateToken(response);
         String reFreshToken = jwtUtil.refreshToken(response);
 
@@ -96,7 +106,11 @@ public class UserDetailsServiceImpl implements UserAccountService {
         String refreshToken = jwtUtil.refreshToken(acc);
         revokeAllUserTokens(acc);
         saveToken(acc, accessToken);
-        return AuthResponse.builder().tokenType(TokenType.BEARER.name()).accessToken(accessToken).refreshToken(refreshToken).build();
+        return AuthResponse.builder()
+                .userName(acc.getUsername())
+                .userId(acc.getUserId())
+                .role(acc.getRoles())
+                .tokenType(TokenType.BEARER.name()).accessToken(accessToken).refreshToken(refreshToken).build();
     }
 
 
@@ -135,12 +149,12 @@ public class UserDetailsServiceImpl implements UserAccountService {
     }
 
     @Override
-    public  UserAccountDto getUserAccount(String userName) {
+    public UserAccountDto getUserAccount(String userName) {
         List<Object[]> userAccount = userRepository.findUserAndRoleAccountByUserName(userName);
         CommonMapper<UserAccountDto> commonMapper = new CommonMapper<>(UserAccountDto::new);
         List<UserAccountDto> userAccountDtos = commonMapper.mapToObjects(userAccount);
 
-        if (userAccountDtos.isEmpty()){
+        if (userAccountDtos.isEmpty()) {
             log.error("User not found: " + userName);
         }
         return userAccountDtos.stream().findFirst().orElse(null);

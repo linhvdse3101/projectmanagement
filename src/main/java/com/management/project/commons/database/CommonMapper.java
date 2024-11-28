@@ -25,7 +25,7 @@ public class CommonMapper<T> {
         return supplier.get();
     }
 
-    public T mapToObject(Object[] objArray) {
+    private T mapToObject(Object[] objArray) {
         T object = newInstance();
         Field[] fields = object.getClass().getDeclaredFields();
         int index = 0;

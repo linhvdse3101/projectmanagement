@@ -8,24 +8,10 @@
 		<version>3.3.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>synchronized.data.video</groupId>
+	<groupId>com.management.project</groupId>
 	<artifactId>projectmanagement</artifactId>
 	<version>0.0.1</version>
-	<name>synchronizedvideo</name>
-	<description>synchronized video from facebook and youtube</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	<name>projectmanagement</name>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

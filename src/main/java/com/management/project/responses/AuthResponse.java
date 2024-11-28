@@ -22,5 +22,8 @@ public class AuthResponse implements Serializable {
     @JsonProperty("token_type")
     private String tokenType;
     @JsonProperty("user_role")
-    private List<UserRole> roles;
+    private String role;
+    private String userName;
+    private Long userId;
+
 }

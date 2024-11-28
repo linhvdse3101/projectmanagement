@@ -1,10 +1,9 @@
 package com.management.project.auth;
 
-import com.management.project.responses.UserAccountDto;
+import com.management.project.responses.commons.UserAccountDto;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
@@ -15,8 +14,8 @@ public class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // Check if authentication is not null and the principal is an instance of UserDetails
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof UserAccountDto) {
+            UserAccountDto userDetails = (UserAccountDto) authentication.getPrincipal();
             return userDetails.getUsername();
         }
 
@@ -27,11 +26,8 @@ public class SecurityUtils {
     // Optionally, get the full UserDetails object
     public static UserAccountDto getLoggedInUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            var userDetail = (UserDetails) authentication.getPrincipal();
-            return UserAccountDto.builder()
-                    .userName(userDetail.getUsername())
-                    .build();
+        if (authentication != null && authentication.getPrincipal() instanceof UserAccountDto) {
+            return (UserAccountDto) authentication.getPrincipal();
         }
         return null;
     }

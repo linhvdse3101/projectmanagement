@@ -3,7 +3,6 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-
     <!-- ChangeSet to create user_account table -->
     <changeSet id="create-user-account-table" author="Linhvd">
         <createTable tableName="user_account">
@@ -75,7 +74,7 @@
             <column name="project_description" type="TEXT">
                 <constraints nullable="true"/>
             </column>
-            <column name="owner_id" type="BIGINT">
+            <column name="user_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -103,6 +102,7 @@
             <column name="assigned_to" type="BIGINT">
                 <constraints nullable="true"/>
             </column>
+            <column name="delete_flag" type="boolean" defaultValueBoolean="false"/>
         </createTable>
     </changeSet>
 
@@ -128,7 +128,7 @@
     <changeSet id="add-foreign-key-st-project-owner" author="Linhvd">
         <addForeignKeyConstraint
                 baseTableName="st_project"
-                baseColumnNames="owner_id"
+                baseColumnNames="user_id"
                 constraintName="fk_st_project_user"
                 referencedTableName="user_account"
                 referencedColumnNames="user_id"/>
@@ -157,7 +157,7 @@
     <changeSet id="add-projects-foreign-key" author="Linhvd">
         <addForeignKeyConstraint
                 baseTableName="st_project"
-                baseColumnNames="owner_id"
+                baseColumnNames="user_id"
                 constraintName="fk_project_user_account"
                 referencedTableName="user_account"
                 referencedColumnNames="user_id"/>

@@ -27,4 +27,6 @@ public class Task extends AbstractEntity {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserAccount assignedTo;
+    @Builder.Default
+    private Boolean deleteFlag = false;
 }

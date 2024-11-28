@@ -2,7 +2,7 @@ package com.management.project.services.auth;
 
 import com.management.project.requests.RegisterRequest;
 import com.management.project.responses.AuthResponse;
-import com.management.project.responses.UserAccountDto;
+import com.management.project.responses.commons.UserAccountDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

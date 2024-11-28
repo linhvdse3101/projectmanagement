@@ -1,6 +1,6 @@
 package com.management.project.handelexceptions;
 
-import com.management.project.responses.CommonResponse;
+import com.management.project.responses.commons.CommonResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
